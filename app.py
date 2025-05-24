@@ -6,6 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
 
+# 💡 Dòng này PHẢI được đặt ngay sau import
+st.set_page_config(page_title="FGSM Attack Demo", layout="centered")
+
 # --- Cài đặt thiết bị ---
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -58,7 +61,6 @@ def fast_gradient_sign_method(model, imgs, labels, epsilon=0.02):
     return adv_imgs.detach(), grad_sign
 
 # --- App ---
-st.set_page_config(page_title="FGSM Attack Demo", layout="centered")
 st.title("⚔️ Demo Tấn công Adversarial (FGSM) trên ResNet34")
 
 uploaded_file = st.file_uploader("📤 Upload một ảnh JPG/PNG", type=["jpg", "jpeg", "png"])
