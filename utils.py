@@ -43,34 +43,37 @@ def show_prediction_plot(img, pred, adv_img=None, adv_pred=None, noise=None, K=5
         img = np.clip(img, 0, 1)
         return img
 
-    fig, ax = plt.subplots(1, 5 if (adv_img is not None and noise is not None) else 2, figsize=(12, 2))
+    fig_cols = 5 if (adv_img is not None and noise is not None) else 2
+    fig, ax = plt.subplots(1, fig_cols, figsize=(12, 2))
 
-    # Original image
+    # Lấy label top-1
+    orig_label = label_names[pred.argmax().item()] if pred is not None else "Unknown"
+    adv_label = label_names[adv_pred.argmax().item()] if adv_pred is not None else "Unknown"
+
+    # Ảnh gốc
     ax[0].imshow(tensor_to_img(img))
-    ax[0].set_title("Original")
+    ax[0].set_title(f"Original\n[{orig_label}]")
     ax[0].axis("off")
 
     if adv_img is not None and noise is not None:
-        # Adversarial image
+        # Ảnh đối kháng
         ax[1].imshow(tensor_to_img(adv_img))
-        ax[1].set_title("Adversarial")
+        ax[1].set_title(f"Adversarial\n[{adv_label}]")
         ax[1].axis("off")
 
         # Noise
         noise_vis = noise.permute(1, 2, 0).detach().cpu().numpy()
-        noise_vis = noise_vis * 0.5 + 0.5  # scale noise to [0,1]
+        noise_vis = noise_vis * 0.5 + 0.5  # scale to [0,1]
+        noise_vis = np.clip(noise_vis, 0, 1)
         ax[2].imshow(noise_vis)
         ax[2].set_title("Noise")
         ax[2].axis("off")
 
         ax[3].axis("off")  # spacing
 
-    # Predictions
-    if adv_pred is not None:
-        topk_vals, topk_idx = torch.topk(torch.softmax(adv_pred, dim=-1), K)
-    else:
-        topk_vals, topk_idx = torch.topk(torch.softmax(pred, dim=-1), K)
-
+    # Top-K dự đoán (gốc hoặc đối kháng)
+    output = adv_pred if adv_pred is not None else pred
+    topk_vals, topk_idx = torch.topk(torch.softmax(output, dim=-1), K)
     topk_vals = topk_vals.detach().cpu().numpy()
     topk_idx = topk_idx.detach().cpu().numpy()
     labels = [label_names[i] if i < len(label_names) else str(i) for i in topk_idx]
